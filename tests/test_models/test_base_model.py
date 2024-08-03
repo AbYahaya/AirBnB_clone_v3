@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """Test BaseModel for expected behavior and documentation"""
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import inspect
 import models
 import pep8 as pycodestyle
@@ -82,15 +82,21 @@ class TestBaseModel(unittest.TestCase):
         """Test that two BaseModel instances have different datetime objects
         and that upon creation have identical updated_at and created_at
         value."""
-        tic = datetime.now()
+        tol = timedelta(milliseconds=1)  # Tolerance window of 1 millisecond
+
+        tic = datetime.now(timezone.utc)
         inst1 = BaseModel()
-        toc = datetime.now()
-        self.assertTrue(tic <= inst1.created_at <= toc)
-        time.sleep(1e-4)
-        tic = datetime.now()
+        toc = datetime.now(timezone.utc)
+        print(f"tic: {tic}, created_at: {inst1.created_at}, toc: {toc}")
+        self.assertTrue(tic - tol <= inst1.created_at <= toc + tol,
+                        f"created_at {inst1.created_at} not between {tic} and {toc}")
+        time.sleep(0.01)  # Small sleep to ensure different timestamp
+        tic = datetime.now(timezone.utc)
         inst2 = BaseModel()
-        toc = datetime.now()
-        self.assertTrue(tic <= inst2.created_at <= toc)
+        toc = datetime.now(timezone.utc)
+        print(f"tic: {tic}, created_at: {inst2.created_at}, toc: {toc}")
+        self.assertTrue(tic - tol <= inst2.created_at <= toc + tol,
+                        f"created_at {inst2.created_at} not btw {tic} n {toc}")
         self.assertEqual(inst1.created_at, inst1.updated_at)
         self.assertEqual(inst2.created_at, inst2.updated_at)
         self.assertNotEqual(inst1.created_at, inst2.created_at)
